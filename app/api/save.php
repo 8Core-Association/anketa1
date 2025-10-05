@@ -3,9 +3,15 @@ require dirname(__DIR__) . '/config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
 
 try {
-    $pdo = pdo_db();
     $input = file_get_contents('php://input');
     $data = [];
     if ($input && isset($_SERVER['CONTENT_TYPE']) && str_starts_with($_SERVER['CONTENT_TYPE'], 'application/json')) {
@@ -24,20 +30,57 @@ try {
     foreach ([['r1',$r1],['r2',$r2],['r3',$r3],['r4',$r4]] as [$k,$v]) if (!in_array($v,[1,2,3,4],true)) $missing[]=$k;
     if ($qms==='yes' && $certificate==='') $missing[]='certificate';
     if ($missing){ http_response_code(422); echo json_encode(['ok'=>false,'error'=>'missing_fields','fields'=>$missing],JSON_UNESCAPED_UNICODE); exit; }
-    $stmt=$pdo->prepare('INSERT INTO submissions
-        (record_no, revision, issue_date, lang, company, address, phone, fax, web, email, qms, certificate,
-         r1, r2, r3, r4, q1, q2, q3, filled_by, signature, doc_date, ip, user_agent)
-        VALUES
-        (:record_no,:revision,:issue_date,:lang,:company,:address,:phone,:fax,:web,:email,:qms,:certificate,
-         :r1,:r2,:r3,:r4,:q1,:q2,:q3,:filled_by,:signature,:doc_date,:ip,:ua)');
-    $stmt->execute([
-        ':record_no'=>RECORD_NO,':revision'=>REVISION,':issue_date'=>ISSUE_DATE,':lang'=>$lang,
-        ':company'=>$company,':address'=>$address,':phone'=>$phone?:null,':fax'=>$fax?:null,':web'=>$web?:null,':email'=>$email,
-        ':qms'=>$qms,':certificate'=>$certificate?:null,':r1'=>$r1,':r2'=>$r2,':r3'=>$r3,':r4'=>$r4,
-        ':q1'=>$q1?:null,':q2'=>$q2?:null,':q3'=>$q3?:null,':filled_by'=>$filled_by?:null,':signature'=>$signature?:null,
-        ':doc_date'=>$doc_date?:null,':ip'=>$_SERVER['REMOTE_ADDR']??null,':ua'=>$_SERVER['HTTP_USER_AGENT']??null
+
+    $payload = [
+        'record_no' => RECORD_NO,
+        'revision' => REVISION,
+        'issue_date' => ISSUE_DATE,
+        'lang' => $lang,
+        'company' => $company,
+        'address' => $address,
+        'phone' => $phone ?: null,
+        'fax' => $fax ?: null,
+        'web' => $web ?: null,
+        'email' => $email,
+        'qms' => $qms,
+        'certificate' => $certificate ?: null,
+        'r1' => $r1,
+        'r2' => $r2,
+        'r3' => $r3,
+        'r4' => $r4,
+        'q1' => $q1 ?: null,
+        'q2' => $q2 ?: null,
+        'q3' => $q3 ?: null,
+        'filled_by' => $filled_by ?: null,
+        'signature' => $signature ?: null,
+        'doc_date' => $doc_date ?: null,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
+    ];
+
+    $ch = curl_init(SUPABASE_URL . '/rest/v1/submissions');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_HTTPHEADER => [
+            'apikey: ' . SUPABASE_ANON_KEY,
+            'Authorization: Bearer ' . SUPABASE_ANON_KEY,
+            'Content-Type: application/json',
+            'Prefer: return=representation'
+        ]
     ]);
-    $id=(int)$pdo->lastInsertId();
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode !== 201) {
+        throw new Exception('Supabase insert failed: ' . $response);
+    }
+
+    $result = json_decode($response, true);
+    $id = $result[0]['id'] ?? 0;
+
     echo json_encode(['ok'=>true,'id'=>$id,'pdf_url'=>'/pdf.php?id='.$id], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
