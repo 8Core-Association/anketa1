@@ -1,0 +1,546 @@
+<?php
+// Self-contained bilingual form page for anketa.motorpoint.org
+?><!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ANKETA – ZADOVOLJSTVO KORISNIKA / Customer Satisfaction Survey</title>
+  <style>
+    :root{
+      --bg: #0f172a;
+      --bg-soft:#111827;
+      --card:#0b1220;
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --accent:#22d3ee;
+      --accent-2:#8b5cf6;
+      --warn:#f59e0b;
+      --border:#23324c;
+      --shadow: 0 10px 30px rgba(0,0,0,.4);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(34,211,238,.12), transparent 60%),
+                  radial-gradient(1200px 800px at 120% 10%, rgba(139,92,246,.12), transparent 60%),
+                  linear-gradient(180deg, var(--bg), #050914);
+      color: var(--text);
+      line-height:1.55;
+    }
+    .container{ max-width: 1100px; margin: 32px auto 110px; padding: 0 20px; }
+    header.app{ display:flex; align-items:center; gap:16px; justify-content:space-between; margin-bottom: 18px; }
+    .brand{ display:flex; align-items:center; gap:14px; }
+    .logo{ width:48px;height:48px; border-radius:12px;
+      background: conic-gradient(from 200deg at 50% 50%, var(--accent), var(--accent-2), var(--accent));
+      box-shadow: 0 0 0 2px rgba(255,255,255,.05), 0 10px 25px rgba(34,211,238,.25);
+    }
+    h1{ margin:0; font-size: clamp(20px, 2.3vw, 28px); line-height:1.2; letter-spacing:.2px; }
+    h1 small{ display:block; font-weight:500; color:var(--muted); font-size:.75em; margin-top:2px;}
+    .lang-switch{ display:flex; gap:8px; background: rgba(255,255,255,.03);
+      border:1px solid var(--border); padding:6px; border-radius: 999px; box-shadow: var(--shadow); }
+    .lang-switch button{ border:0; background:transparent; color:var(--muted);
+      padding:8px 14px; border-radius: 999px; cursor:pointer; font-weight:600; transition: all .2s ease; }
+    .lang-switch button.active{ background: linear-gradient(135deg, rgba(34,211,238,.25), rgba(139,92,246,.25));
+      color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }
+    .card{ background: linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,.03));
+      border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; margin: 16px 0; }
+    .meta{ display:flex; gap:12px; flex-wrap:wrap; font-size: 14px; color: var(--muted); }
+    .meta .chip{ padding:6px 10px; border:1px dashed var(--border); border-radius: 10px; background: rgba(255,255,255,.02); }
+    .grid{ display:grid; gap:14px; }
+    @media (min-width: 720px){ .grid.two{ grid-template-columns: 1fr 1fr; } .grid.three{ grid-template-columns: 1fr 1fr 1fr; } }
+    label{ font-weight:600; display:block; margin-bottom:6px;}
+    .field{ display:flex; flex-direction:column; }
+    .input, select, textarea{ width:100%; background: #0a1222; border:1px solid var(--border); color: var(--text);
+      padding: 12px 14px; border-radius: 12px; outline:none; transition: border-color .2s, box-shadow .2s; }
+    .input:focus, textarea:focus, select:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px rgba(34,211,238,.18); }
+    textarea{ min-height: 120px; resize: vertical; }
+    .hint{ color: var(--muted); font-size: 13px; margin-top: 4px;}
+    .row{ display:flex; gap:14px; align-items: center; flex-wrap: wrap;}
+    .yesno{ display:flex; gap:10px; }
+    .radio-pill input{ position:absolute; opacity:0; }
+    .radio-pill label{ padding: 9px 14px; border:1px solid var(--border); border-radius: 100px; cursor:pointer;
+      color: var(--muted); background: rgba(255,255,255,.02); transition: all .2s; user-select:none; }
+    .radio-pill input:checked + label{ color:#fff; background: linear-gradient(135deg, rgba(34,211,238,.22), rgba(139,92,246,.22));
+      border-color: rgba(255,255,255,.25); box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }
+    .rating{ display:flex; gap:10px; align-items:center; flex-wrap: wrap; }
+    .rating .scale{ display:grid; grid-template-columns: repeat(4, minmax(52px, 1fr)); gap:8px; }
+    .rating input{ position:absolute; opacity:0; }
+    .rating label{ display:flex; align-items:center; justify-content:center; font-weight:700; border:1px solid var(--border);
+      border-radius:12px; padding: 12px; background: rgba(255,255,255,.02); color: var(--muted); cursor:pointer; transition: .15s ease; }
+    .rating input:checked + label{ color:#fff; border-color: rgba(255,255,255,.25); background: linear-gradient(135deg, rgba(34,211,238,.22), rgba(139,92,246,.22)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+    .rating .title{ min-width: 320px; font-weight: 600; }
+    .rating .rule{ color: var(--muted); font-size: 13px; }
+    .section-title{ margin: 8px 0 4px; font-size: 18px; font-weight: 800; letter-spacing:.2px; }
+    .toolbar{ position: sticky; bottom: 12px; z-index: 10; display:flex; gap:10px; flex-wrap: wrap; justify-content:flex-end;
+      margin-top: 18px; padding-top: 10px; }
+    .btn{ border:0; padding: 12px 16px; border-radius: 12px; cursor:pointer; font-weight: 700; background: #0a1222; color:#fff;
+      border:1px solid var(--border); transition:.2s; box-shadow: var(--shadow); }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn.primary{ background: linear-gradient(135deg, rgba(34,211,238,.35), rgba(139,92,246,.35)); border-color: rgba(255,255,255,.25); }
+    .btn.ghost{ background: transparent; }
+    .small{ font-size: 13px; color: var(--muted); }
+    .send-to{ border:1px dashed var(--border); border-radius: 14px; padding:12px; background: rgba(255,255,255,.02); color: var(--muted); font-size: 14px; }
+    .footer-note{ color: var(--muted); font-size: 13px; }
+    .required:after{ content:" *"; color: var(--warn); }
+    .two-col{ display:grid; gap:12px; grid-template-columns: 1fr; } @media (min-width: 820px){ .two-col{ grid-template-columns: 1fr 1fr; } }
+    @media print{ body{ background:#fff; color:#000; } .card, .send-to{ box-shadow:none; background:#fff; border-color:#000; }
+      .lang-switch, .toolbar, .logo{ display:none !important; } a{ color:#000; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="app">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1 data-i18n="title-hr">
+            ANKETA – ZADOVOLJSTVO KORISNIKA
+            <small data-i18n="subtitle-hr">Customer Satisfaction Survey</small>
+          </h1>
+        </div>
+      </div>
+      <div class="lang-switch" role="group" aria-label="Language switch">
+        <button type="button" id="btnHR" class="active">HR</button>
+        <button type="button" id="btnEN">EN</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="meta">
+        <span class="chip"><strong data-i18n="recordNo-label">Zapis br. / Record No.:</strong> <span id="recordNo">AZK SUK 0912</span></span>
+        <span class="chip"><strong>Rev.</strong> 1.00</span>
+        <span class="chip"><strong data-i18n="issueDate-label">Datum izdavanja / Date of issue:</strong> 05.11.2019</span>
+        <span class="chip"><strong>ISO 9001:2015</strong></span>
+      </div>
+      <p class="small" data-i18n="intro">
+        Poštovani, u skladu sa zahtjevom međunarodne norme ISO 9001:2015, godišnje provodimo ispitivanje Vašeg zadovoljstva poslovanjem s nama, s ciljem unapređenja suradnje.
+        <br><em>Dear Sirs, in accordance with ISO 9001:2015, we carry out an annual survey of your satisfaction to improve mutual cooperation.</em>
+      </p>
+    </section>
+
+    <form id="surveyForm" novalidate>
+      <section class="card">
+        <h2 class="section-title" data-i18n="org-info">Podaci o organizaciji / Organization info</h2>
+        <div class="grid two">
+          <div class="field">
+            <label for="company" class="required" data-i18n="company">Naziv organizacije / Company Name</label>
+            <input type="text" id="company" name="company" class="input" required />
+          </div>
+          <div class="field">
+            <label for="address" class="required" data-i18n="address">Adresa / Address</label>
+            <input type="text" id="address" name="address" class="input" required />
+          </div>
+          <div class="field">
+            <label for="phone" data-i18n="phone">Tel / Phone</label>
+            <input type="tel" id="phone" name="phone" class="input" />
+          </div>
+          <div class="field">
+            <label for="fax" data-i18n="fax">Faks / Fax</label>
+            <input type="text" id="fax" name="fax" class="input" />
+          </div>
+          <div class="field">
+            <label for="web" data-i18n="web">www</label>
+            <input type="url" id="web" name="web" class="input" placeholder="https://example.com" />
+          </div>
+          <div class="field">
+            <label for="email" class="required" data-i18n="email">E-mail</label>
+            <input type="email" id="email" name="email" class="input" required />
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title" data-i18n="qms-title">Certificiran sustav upravljanja kvalitetom / Certified QMS</h2>
+        <div class="row" role="radiogroup" aria-labelledby="qms-title">
+          <div class="yesno">
+            <span class="radio-pill">
+              <input type="radio" id="qms-no" name="qms" value="no" checked>
+              <label for="qms-no" data-i18n="no">NE / NO</label>
+            </span>
+            <span class="radio-pill">
+              <input type="radio" id="qms-yes" name="qms" value="yes">
+              <label for="qms-yes" data-i18n="yes">DA / YES</label>
+            </span>
+          </div>
+          <div class="field" style="min-width:280px; flex:1;">
+            <label for="certificate" data-i18n="certificate">Naziv certifikata / Name of certificate</label>
+            <input type="text" id="certificate" name="certificate" class="input" disabled>
+            <div class="hint" data-i18n="certificate-hint">Aktivira se ako je odabrano “DA”. / Enabled if “YES” is selected.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title" data-i18n="ratings-title">Koliko ste zadovoljni / How satisfied are you</h2>
+        <p class="hint" data-i18n="ratings-hint">Ocjena 1–4 (1: u potpunosti nezadovoljan / completely unsatisfied … 4: u potpunosti zadovoljan / completely satisfied).</p>
+
+        <div class="grid">
+          <div class="rating">
+            <div class="title" data-i18n="r1">Karakteristikama proizvoda / usluge • Product / service characteristics</div>
+            <div class="scale">
+              <span><input required type="radio" id="r1-1" name="r1" value="1"><label for="r1-1">1</label></span>
+              <span><input type="radio" id="r1-2" name="r1" value="2"><label for="r1-2">2</label></span>
+              <span><input type="radio" id="r1-3" name="r1" value="3"><label for="r1-3">3</label></span>
+              <span><input type="radio" id="r1-4" name="r1" value="4"><label for="r1-4">4</label></span>
+            </div>
+          </div>
+
+          <div class="rating">
+            <div class="title" data-i18n="r2">Kooperativnošću osoblja • Employees cooperativity</div>
+            <div class="scale">
+              <span><input required type="radio" id="r2-1" name="r2" value="1"><label for="r2-1">1</label></span>
+              <span><input type="radio" id="r2-2" name="r2" value="2"><label for="r2-2">2</label></span>
+              <span><input type="radio" id="r2-3" name="r2" value="3"><label for="r2-3">3</label></span>
+              <span><input type="radio" id="r2-4" name="r2" value="4"><label for="r2-4">4</label></span>
+            </div>
+          </div>
+
+          <div class="rating">
+            <div class="title" data-i18n="r3">Rokom isporuke • Term of delivery</div>
+            <div class="scale">
+              <span><input required type="radio" id="r3-1" name="r3" value="1"><label for="r3-1">1</label></span>
+              <span><input type="radio" id="r3-2" name="r3" value="2"><label for="r3-2">2</label></span>
+              <span><input type="radio" id="r3-3" name="r3" value="3"><label for="r3-3">3</label></span>
+              <span><input type="radio" id="r3-4" name="r3" value="4"><label for="r3-4">4</label></span>
+            </div>
+          </div>
+
+          <div class="rating">
+            <div class="title" data-i18n="r4">Cijenom i uvjetima plaćanja • Price and terms of payment</div>
+            <div class="scale">
+              <span><input required type="radio" id="r4-1" name="r4" value="1"><label for="r4-1">1</label></span>
+              <span><input type="radio" id="r4-2" name="r4" value="2"><label for="r4-2">2</label></span>
+              <span><input type="radio" id="r4-3" name="r4" value="3"><label for="r4-3">3</label></span>
+              <span><input type="radio" id="r4-4" name="r4" value="4"><label for="r4-4">4</label></span>
+            </div>
+          </div>
+        </div>
+
+        <p class="small" data-i18n="rating-rule">
+          4 – U potpunosti zadovoljan • Completely satisfied / 3 – Uglavnom zadovoljan • Mainly satisfied /
+          2 – Uglavnom nezadovoljan • Mainly unsatisfied / 1 – U potpunosti nezadovoljan • Completely unsatisfied
+        </p>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title" data-i18n="open-title">Otvorena pitanja / Open questions</h2>
+        <div class="grid">
+          <div class="field">
+            <label for="q1" data-i18n="q1">Želite li nastaviti suradnju i zašto? / Do you wish to maintain cooperation and why?</label>
+            <textarea id="q1" name="q1" class="input"></textarea>
+          </div>
+          <div class="field">
+            <label for="q2" data-i18n="q2">Da li biste nas preporučili i zašto? / Would you recommend us and why?</label>
+            <textarea id="q2" name="q2" class="input"></textarea>
+          </div>
+          <div class="field">
+            <label for="q3" data-i18n="q3">Vaše primjedbe i prijedlozi za unapređenje suradnje / Your remarks and recommendations for improvement of cooperation</label>
+            <textarea id="q3" name="q3" class="input"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title" data-i18n="footer-title">Potpis i datum / Signature & Date</h2>
+        <div class="two-col">
+          <div class="field">
+            <label for="filledBy" data-i18n="filledBy">Upitnik ispunio / CSS filled by</label>
+            <input type="text" id="filledBy" name="filledBy" class="input" />
+          </div>
+          <div class="field">
+            <label for="signature" data-i18n="signature">Potpis / Signature</label>
+            <input type="text" id="signature" name="signature" class="input" />
+          </div>
+          <div class="field">
+            <label for="date" data-i18n="date">Datum / Date</label>
+            <input type="date" id="date" name="date" class="input" />
+          </div>
+        </div>
+        <p class="footer-note">
+          <strong data-i18n="sent-by-label">Upitnik šalje / CSS sent by:</strong> <span data-i18n="sent-by">Uprava; Darko Rakoš</span>
+        </p>
+      </section>
+
+      <section class="card send-to">
+        <p data-i18n="send-instr">
+          Zahvaljujemo na suradnji. Molimo pošaljite ispunjeni upitnik na adresu u nastavku ili putem e‑pošte.
+          <br><em>Thanks for your cooperation. Please send the filled questionnaire to the address below or by e‑mail.</em>
+        </p>
+        <address>
+          <strong>MOTORPOINT d.o.o.</strong><br/>
+          Hosti 101<br/>
+          51000 Rijeka, Croatia<br/>
+          <a href="mailto:info@motorpoint.hr">info@motorpoint.hr</a>
+        </address>
+      </section>
+
+      <div class="toolbar">
+        <button type="button" class="btn ghost" id="btnClear" data-i18n="btn-clear">Očisti / Clear</button>
+        <button type="button" class="btn" id="btnPreview" data-i18n="btn-preview">Pregled / Preview</button>
+        <button type="button" class="btn" id="btnPrint" data-i18n="btn-print">Ispis / Print</button>
+        <button type="submit" class="btn primary" id="btnSubmit" data-i18n="btn-submit">Spremi / Save</button>
+      </div>
+    </form>
+
+    <dialog id="previewDialog">
+      <style>
+        #previewDialog{ width:min(900px, 95vw); border:1px solid var(--border); border-radius:16px; padding:0; background:#0a1222; color:var(--text); }
+        #previewHeader{ padding:14px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+        #previewContent{ padding:18px; max-height:70vh; overflow:auto; }
+      </style>
+      <div id="previewHeader">
+        <strong data-i18n="preview-title">Pregled odgovora / Response preview</strong>
+        <button class="btn" id="closePreview" aria-label="Close">×</button>
+      </div>
+      <div id="previewContent" aria-live="polite"></div>
+    </dialog>
+
+    <p class="small" style="margin-top:20px">
+      <span data-i18n="autosave">Obrazac se automatski sprema u pregledniku (localStorage). / The form auto-saves locally.</span>
+    </p>
+  </div>
+
+  <script>
+    const t = {
+      hr: {
+        "title-hr":"ANKETA – ZADOVOLJSTVO KORISNIKA",
+        "subtitle-hr":"Customer Satisfaction Survey",
+        intro: "Poštovani, u skladu sa zahtjevom međunarodne norme ISO 9001:2015, godišnje provodimo ispitivanje Vašeg zadovoljstva poslovanjem s nama, s ciljem unapređenja suradnje.<br><em>Dear Sirs, in accordance with ISO 9001:2015, we carry out an annual survey of your satisfaction to improve mutual cooperation.</em>",
+        "recordNo-label":"Zapis br. / Record No.:",
+        "issueDate-label":"Datum izdavanja / Date of issue:",
+        "org-info":"Podaci o organizaciji / Organization info",
+        company:"Naziv organizacije / Company Name",
+        address:"Adresa / Address",
+        phone:"Tel / Phone",
+        fax:"Faks / Fax",
+        web:"www",
+        email:"E-mail",
+        "qms-title":"Certificiran sustav upravljanja kvalitetom / Certified QMS",
+        no:"NE / NO",
+        yes:"DA / YES",
+        certificate:"Naziv certifikata / Name of certificate",
+        "certificate-hint":"Aktivira se ako je odabrano “DA”. / Enabled if “YES” is selected.",
+        "ratings-title":"Koliko ste zadovoljni / How satisfied are you",
+        "ratings-hint":"Ocjena 1–4 (1: u potpunosti nezadovoljan / completely unsatisfied … 4: u potpunosti zadovoljan / completely satisfied).",
+        r1:"Karakteristikama proizvoda / usluge • Product / service characteristics",
+        r2:"Kooperativnošću osoblja • Employees cooperativity",
+        r3:"Rokom isporuke • Term of delivery",
+        r4:"Cijenom i uvjetima plaćanja • Price and terms of payment",
+        "rating-rule":"4 – U potpunosti zadovoljan • Completely satisfied / 3 – Uglavnom zadovoljan • Mainly satisfied / 2 – Uglavnom nezadovoljan • Mainly unsatisfied / 1 – U potpunosti nezadovoljan • Completely unsatisfied",
+        "open-title":"Otvorena pitanja / Open questions",
+        q1:"Želite li nastaviti suradnju i zašto? / Do you wish to maintain cooperation and why?",
+        q2:"Da li biste nas preporučili i zašto? / Would you recommend us and why?",
+        q3:"Vaše primjedbe i prijedlozi za unapređenje suradnje / Your remarks and recommendations for improvement of cooperation",
+        "footer-title":"Potpis i datum / Signature & Date",
+        filledBy:"Upitnik ispunio / CSS filled by",
+        signature:"Potpis / Signature",
+        date:"Datum / Date",
+        "sent-by-label":"Upitnik šalje / CSS sent by:",
+        "sent-by":"Uprava; Darko Rakoš",
+        "send-instr":"Zahvaljujemo na suradnji. Molimo pošaljite ispunjeni upitnik na adresu u nastavku ili putem e‑pošte.<br><em>Thanks for your cooperation. Please send the filled questionnaire to the address below or by e‑mail.</em>",
+        "btn-clear":"Očisti / Clear",
+        "btn-preview":"Pregled / Preview",
+        "btn-print":"Ispis / Print",
+        "btn-submit":"Spremi / Save",
+        "preview-title":"Pregled odgovora / Response preview",
+        "autosave":"Obrazac se automatski sprema u pregledniku (localStorage). / The form auto-saves locally."
+      },
+      en: {
+        "title-hr":"CUSTOMER SATISFACTION SURVEY",
+        "subtitle-hr":"Anketa – Zadovoljstvo korisnika",
+        intro: "Dear Sirs, in accordance with ISO 9001:2015, we carry out an annual survey of your satisfaction to improve mutual cooperation.<br><em>Poštovani, u skladu sa zahtjevom međunarodne norme ISO 9001:2015, godišnje provodimo ispitivanje Vašeg zadovoljstva poslovanjem s nama, s ciljem unapređenja suradnje.</em>",
+        "recordNo-label":"Record No. / Zapis br.:",
+        "issueDate-label":"Date of issue / Datum izdavanja:",
+        "org-info":"Organization info / Podaci o organizaciji",
+        company:"Company Name / Naziv organizacije",
+        address:"Address / Adresa",
+        phone:"Phone / Tel",
+        fax:"Fax / Faks",
+        web:"Website",
+        email:"E-mail",
+        "qms-title":"Certified quality management system / Certificiran SUK",
+        no:"NO / NE",
+        yes:"YES / DA",
+        certificate:"Name of certificate / Naziv certifikata",
+        "certificate-hint":"Enabled if “YES” is selected. / Aktivira se ako je odabrano “DA”.",
+        "ratings-title":"How satisfied are you / Koliko ste zadovoljni",
+        "ratings-hint":"Rate 1–4 (1: completely unsatisfied … 4: completely satisfied).",
+        r1:"Product / service characteristics • Karakteristike proizvoda/usluge",
+        r2:"Employees cooperativity • Kooperativnost osoblja",
+        r3:"Term of delivery • Rok isporuke",
+        r4:"Price and terms of payment • Cijena i uvjeti plaćanja",
+        "rating-rule":"4 – Completely satisfied / 3 – Mainly satisfied / 2 – Mainly unsatisfied / 1 – Completely unsatisfied",
+        "open-title":"Open questions / Otvorena pitanja",
+        q1:"Do you wish to maintain cooperation and why? / Želite li nastaviti suradnju i zašto?",
+        q2:"Would you recommend us and why? / Da li biste nas preporučili i zašto?",
+        q3:"Your remarks and recommendations for improvement of cooperation / Vaše primjedbe i prijedlozi za unapređenje suradnje",
+        "footer-title":"Signature & Date / Potpis i datum",
+        filledBy:"CSS filled by / Upitnik ispunio",
+        signature:"Signature / Potpis",
+        date:"Date / Datum",
+        "sent-by-label":"CSS sent by / Upitnik šalje:",
+        "sent-by":"Management; Darko Rakoš / Uprava; Darko Rakoš",
+        "send-instr":"Thanks for your cooperation. Please send the filled questionnaire to the address below or by e‑mail.<br><em>Zahvaljujemo na suradnji. Molimo pošaljite ispunjeni upitnik na adresu u nastavku ili putem e‑pošte.</em>",
+        "btn-clear":"Clear / Očisti",
+        "btn-preview":"Preview / Pregled",
+        "btn-print":"Print / Ispis",
+        "btn-submit":"Save / Spremi",
+        "preview-title":"Response preview / Pregled odgovora",
+        "autosave":"The form auto-saves locally (localStorage). / Obrazac se automatski sprema u pregledniku (localStorage)."
+      }
+    };
+
+    const $ = (sel, ctx=document)=>ctx.querySelector(sel);
+    const $$ = (sel, ctx=document)=>[...ctx.querySelectorAll(sel)];
+
+    const btnHR = $("#btnHR");
+    const btnEN = $("#btnEN");
+    let currentLang = localStorage.getItem("survey.lang") || "hr";
+
+    function applyLang(lang){
+      currentLang = lang;
+      document.documentElement.lang = lang === "hr" ? "hr" : "en";
+      localStorage.setItem("survey.lang", lang);
+      btnHR.classList.toggle("active", lang==="hr");
+      btnEN.classList.toggle("active", lang==="en");
+      const dict = t[lang];
+      $$("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if(dict[key]) el.innerHTML = dict[key];
+      });
+    }
+    btnHR.addEventListener("click", ()=>applyLang("hr"));
+    btnEN.addEventListener("click", ()=>applyLang("en"));
+
+    const qmsRadios = $$("input[name='qms']");
+    const cert = $("#certificate");
+    function updateCertState(){
+      const yes = $("#qms-yes").checked;
+      cert.disabled = !yes;
+      if(!yes) cert.value = "";
+    }
+    qmsRadios.forEach(r=>r.addEventListener("change", updateCertState));
+
+    const form = $("#surveyForm");
+    const STORAGE_KEY = "survey.data.v1";
+    function saveForm(){
+      const data = Object.fromEntries(new FormData(form).entries());
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+    function loadForm(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      try{
+        const data = JSON.parse(raw);
+        $$("input[type='text'], input[type='email'], input[type='tel'], input[type='url'], input[type='date'], textarea").forEach(i=>{
+          if(data[i.name] !== undefined) i.value = data[i.name];
+        });
+        if(data.qms){ const id = data.qms === "yes" ? "#qms-yes" : "#qms-no"; const r = $(id); if(r){ r.checked = true; } }
+        ["r1","r2","r3","r4"].forEach(rn=>{ if(data[rn]){ const ri = document.querySelector(`input[name='${rn}'][value='${data[rn]}']`); if(ri) ri.checked = true; } });
+        updateCertState();
+      }catch(e){}
+    }
+    form.addEventListener("input", saveForm);
+    form.addEventListener("change", saveForm);
+
+    $("#btnClear").addEventListener("click", ()=>{
+      if(confirm(currentLang==="hr" ? "Očistiti sve unesene podatke?" : "Clear all entered data?")){
+        form.reset(); localStorage.removeItem(STORAGE_KEY); updateCertState();
+      }
+    });
+
+    $("#btnPreview").addEventListener("click", ()=>{
+      const missing = validate();
+      if(missing.length){
+        alert((currentLang==="hr" ? "Molimo ispunite obavezna polja: " : "Please fill required fields: ") + missing.join(", "));
+        return;
+      }
+      const data = Object.fromEntries(new FormData(form).entries());
+      const html = `
+        <div class="meta"><div><strong>${$("#recordNo").textContent}</strong> &nbsp; Rev. 1.00</div></div>
+        <h3>${t[currentLang]["org-info"]}</h3>
+        <ul>
+          <li><strong>${t[currentLang]["company"]}:</strong> ${escapeHtml(data.company||"")}</li>
+          <li><strong>${t[currentLang]["address"]}:</strong> ${escapeHtml(data.address||"")}</li>
+          <li><strong>${t[currentLang]["phone"]}:</strong> ${escapeHtml(data.phone||"")}</li>
+          <li><strong>${t[currentLang]["fax"]}:</strong> ${escapeHtml(data.fax||"")}</li>
+          <li><strong>${t[currentLang]["web"]}:</strong> ${escapeHtml(data.web||"")}</li>
+          <li><strong>${t[currentLang]["email"]}:</strong> ${escapeHtml(data.email||"")}</li>
+        </ul>
+        <h3>${t[currentLang]["qms-title"]}</h3>
+        <p><strong>${data.qms==="yes" ? (t[currentLang]["yes"]) : (t[currentLang]["no"])}</strong>${data.qms==="yes" && data.certificate ? ` — ${escapeHtml(data.certificate)}` : ""}</p>
+        <h3>${t[currentLang]["ratings-title"]}</h3>
+        <ul>
+          <li>${t[currentLang]["r1"]}: <strong>${data.r1||"-"}</strong></li>
+          <li>${t[currentLang]["r2"]}: <strong>${data.r2||"-"}</strong></li>
+          <li>${t[currentLang]["r3"]}: <strong>${data.r3||"-"}</strong></li>
+          <li>${t[currentLang]["r4"]}: <strong>${data.r4||"-"}</strong></li>
+        </ul>
+        <h3>${t[currentLang]["open-title"]}</h3>
+        <p><strong>${t[currentLang]["q1"]}:</strong><br>${formatMultiline(data.q1)}</p>
+        <p><strong>${t[currentLang]["q2"]}:</strong><br>${formatMultiline(data.q2)}</p>
+        <p><strong>${t[currentLang]["q3"]}:</strong><br>${formatMultiline(data.q3)}</p>
+        <h3>${t[currentLang]["footer-title"]}</h3>
+        <ul>
+          <li><strong>${t[currentLang]["filledBy"]}:</strong> ${escapeHtml(data.filledBy||"")}</li>
+          <li><strong>${t[currentLang]["signature"]}:</strong> ${escapeHtml(data.signature||"")}</li>
+          <li><strong>${t[currentLang]["date"]}:</strong> ${escapeHtml(data.date||"")}</li>
+        </ul>
+      `;
+      $("#previewContent").innerHTML = html;
+      $("#previewDialog").showModal();
+    });
+    $("#closePreview").addEventListener("click", ()=>$("#previewDialog").close());
+
+    $("#btnPrint").addEventListener("click", ()=>{ window.print(); });
+
+    form.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const missing = validate();
+      if(missing.length){
+        alert((currentLang==="hr" ? "Molimo ispunite obavezna polja: " : "Please fill required fields: ") + missing.join(", "));
+        return;
+      }
+      const payload = Object.fromEntries(new FormData(form).entries());
+      payload.lang = currentLang;
+      try{
+        const res = await fetch("/api/save.php",{
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify(payload)
+        });
+        const out = await res.json();
+        if(!out.ok){ alert("Error: " + (out.error||"unknown")); return; }
+        saveForm();
+        $("#btnPreview").click();
+        const box = document.createElement('div');
+        box.className = 'card';
+        const linkText = currentLang==="hr" ? "Preuzmi PDF" : "Download PDF";
+        box.innerHTML = `<strong>ID:</strong> ${out.id} · <a href="${out.pdf_url}" target="_blank">${linkText}</a>`;
+        document.querySelector('.container').appendChild(box);
+      }catch(err){
+        alert("Network error: "+err.message);
+      }
+    });
+
+    function validate(){
+      const req = [["company", t[currentLang]["company"]],["address", t[currentLang]["address"]],["email", t[currentLang]["email"]]];
+      const missing = [];
+      req.forEach(([name, label])=>{ const el = document.querySelector(`[name='${name}']`); if(!el || !el.value.trim()) missing.push(label); });
+      ["r1","r2","r3","r4"].forEach(rn=>{ if(!form.querySelector(`input[name='${rn}']:checked`)) missing.push(t[currentLang][rn]); });
+      if(document.querySelector("#qms-yes").checked && !document.querySelector("#certificate").value.trim()){ missing.push(t[currentLang]["certificate"]); }
+      return missing;
+    }
+
+    function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m])); }
+    function formatMultiline(s){ return '<pre style="white-space:pre-wrap; font:inherit; margin:0;">'+escapeHtml(s||"")+'</pre>'; }
+
+    // Init
+    loadForm(); updateCertState(); applyLang(currentLang);
+  </script>
+</body>
+</html>
