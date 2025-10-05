@@ -1,6 +1,4 @@
-<?php
-// Self-contained bilingual form page for anketa.motorpoint.org
-?><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="hr">
 <head>
   <meta charset="utf-8" />
@@ -90,6 +88,12 @@
     @media print{ body{ background:#fff; color:#000; } .card, .send-to{ box-shadow:none; background:#fff; border-color:#000; }
       .lang-switch, .toolbar, .logo{ display:none !important; } a{ color:#000; } }
   </style>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+    const SUPABASE_URL = 'https://0ec90b57d6e95fcbda19832f.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJib2x0IiwicmVmIjoiMGVjOTBiNTdkNmU5NWZjYmRhMTk4MzJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4ODE1NzQsImV4cCI6MTc1ODg4MTU3NH0.9I8-U0x86Ak8t2DGaIk0HfvTSLsAyzdnz-Nw00mMkKw';
+    window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+  </script>
 </head>
 <body>
   <div class="container">
@@ -505,24 +509,55 @@
         alert((currentLang==="hr" ? "Molimo ispunite obavezna polja: " : "Please fill required fields: ") + missing.join(", "));
         return;
       }
-      const payload = Object.fromEntries(new FormData(form).entries());
-      payload.lang = currentLang;
+      const formData = Object.fromEntries(new FormData(form).entries());
+      const payload = {
+        record_no: 'AZK SUK 0912',
+        revision: '1.00',
+        issue_date: '2019-11-05',
+        lang: currentLang,
+        company: formData.company,
+        address: formData.address,
+        phone: formData.phone || null,
+        fax: formData.fax || null,
+        web: formData.web || null,
+        email: formData.email,
+        qms: formData.qms || 'no',
+        certificate: formData.qms === 'yes' ? formData.certificate : null,
+        r1: parseInt(formData.r1),
+        r2: parseInt(formData.r2),
+        r3: parseInt(formData.r3),
+        r4: parseInt(formData.r4),
+        q1: formData.q1 || null,
+        q2: formData.q2 || null,
+        q3: formData.q3 || null,
+        filled_by: formData.filledBy || null,
+        signature: formData.signature || null,
+        doc_date: formData.date || null,
+        ip: null,
+        user_agent: navigator.userAgent
+      };
       try{
-        const res = await fetch("/api/save.php",{
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify(payload)
-        });
-        const out = await res.json();
-        if(!out.ok){ alert("Error: " + (out.error||"unknown")); return; }
+        const { data, error } = await window.supabase
+          .from('submissions')
+          .insert([payload])
+          .select()
+          .single();
+
+        if(error) {
+          console.error('Supabase error:', error);
+          alert("Error: " + error.message);
+          return;
+        }
+
         saveForm();
         $("#btnPreview").click();
         const box = document.createElement('div');
         box.className = 'card';
         const linkText = currentLang==="hr" ? "Preuzmi PDF" : "Download PDF";
-        box.innerHTML = `<strong>ID:</strong> ${out.id} · <a href="${out.pdf_url}" target="_blank">${linkText}</a>`;
+        box.innerHTML = `<strong>ID:</strong> ${data.id} · <span style="color:var(--accent)">${currentLang==="hr" ? "Uspješno spremljeno!" : "Successfully saved!"}</span>`;
         document.querySelector('.container').appendChild(box);
       }catch(err){
+        console.error('Unexpected error:', err);
         alert("Network error: "+err.message);
       }
     });

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Supabase Test</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #111; color: #0f0; }
+    .log { margin: 5px 0; padding: 5px; background: #222; }
+    .error { color: #f00; }
+    .success { color: #0f0; }
+  </style>
+</head>
+<body>
+  <h1>Supabase Connection Test</h1>
+  <div id="output"></div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+    const output = document.getElementById('output');
+    const log = (msg, type = 'log') => {
+      const div = document.createElement('div');
+      div.className = `log ${type}`;
+      div.textContent = msg;
+      output.appendChild(div);
+    };
+
+    const SUPABASE_URL = 'https://0ec90b57d6e95fcbda19832f.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJib2x0IiwicmVmIjoiMGVjOTBiNTdkNmU5NWZjYmRhMTk4MzJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4ODE1NzQsImV4cCI6MTc1ODg4MTU3NH0.9I8-U0x86Ak8t2DGaIk0HfvTSLsAyzdnz-Nw00mMkKw';
+
+    log('Connecting to Supabase...');
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    log('✓ Supabase client created', 'success');
+
+    log('Testing table access...');
+    const { data, error, count } = await supabase
+      .from('submissions')
+      .select('*', { count: 'exact' });
+
+    if (error) {
+      log('✗ Error: ' + error.message, 'error');
+      log('Details: ' + JSON.stringify(error), 'error');
+    } else {
+      log('✓ Table accessible!', 'success');
+      log(`✓ Total rows: ${count}`, 'success');
+      log('Data: ' + JSON.stringify(data, null, 2));
+    }
+
+    log('Testing INSERT...');
+    const testData = {
+      record_no: 'TEST-001',
+      revision: '1.00',
+      issue_date: '2019-11-05',
+      lang: 'hr',
+      company: 'Test Company Ltd.',
+      address: 'Test Street 123',
+      email: 'test@example.com',
+      qms: 'no',
+      r1: 3,
+      r2: 3,
+      r3: 3,
+      r4: 3,
+      user_agent: navigator.userAgent
+    };
+
+    const { data: insertData, error: insertError } = await supabase
+      .from('submissions')
+      .insert([testData])
+      .select()
+      .single();
+
+    if (insertError) {
+      log('✗ Insert Error: ' + insertError.message, 'error');
+      log('Details: ' + JSON.stringify(insertError), 'error');
+    } else {
+      log('✓ Test record inserted!', 'success');
+      log('ID: ' + insertData.id, 'success');
+
+      // Cleanup
+      log('Cleaning up test record...');
+      const { error: deleteError } = await supabase
+        .from('submissions')
+        .delete()
+        .eq('id', insertData.id);
+
+      if (deleteError) {
+        log('✗ Delete Error: ' + deleteError.message, 'error');
+      } else {
+        log('✓ Test record deleted', 'success');
+      }
+    }
+
+    log('=== TEST COMPLETE ===', 'success');
+  </script>
+</body>
+</html>

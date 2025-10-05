@@ -1,0 +1,12 @@
+{
+  "name": "anketa-motorpoint",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite public --port 8000",
+    "build": "echo 'Static HTML - no build needed'"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
