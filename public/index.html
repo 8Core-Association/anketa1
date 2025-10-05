@@ -88,12 +88,6 @@
     @media print{ body{ background:#fff; color:#000; } .card, .send-to{ box-shadow:none; background:#fff; border-color:#000; }
       .lang-switch, .toolbar, .logo{ display:none !important; } a{ color:#000; } }
   </style>
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-    const SUPABASE_URL = 'https://0ec90b57d6e95fcbda19832f.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJib2x0IiwicmVmIjoiMGVjOTBiNTdkNmU5NWZjYmRhMTk4MzJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4ODE1NzQsImV4cCI6MTc1ODg4MTU3NH0.9I8-U0x86Ak8t2DGaIk0HfvTSLsAyzdnz-Nw00mMkKw';
-    window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-  </script>
 </head>
 <body>
   <div class="container">
@@ -537,24 +531,22 @@
         user_agent: navigator.userAgent
       };
       try{
-        const { data, error } = await window.supabase
-          .from('submissions')
-          .insert([payload])
-          .select()
-          .single();
-
-        if(error) {
-          console.error('Supabase error:', error);
-          alert("Error: " + error.message);
+        const res = await fetch('/api/save.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        const json = await res.json();
+        if(!json.ok) {
+          alert("Error: " + (json.error || 'unknown'));
           return;
         }
-
         saveForm();
         $("#btnPreview").click();
         const box = document.createElement('div');
         box.className = 'card';
         const linkText = currentLang==="hr" ? "Preuzmi PDF" : "Download PDF";
-        box.innerHTML = `<strong>ID:</strong> ${data.id} · <span style="color:var(--accent)">${currentLang==="hr" ? "Uspješno spremljeno!" : "Successfully saved!"}</span>`;
+        box.innerHTML = `<strong>ID:</strong> ${json.id} · <span style="color:var(--accent)">${currentLang==="hr" ? "Uspješno spremljeno!" : "Successfully saved!"}</span> · <a href="${json.pdf_url}" style="color:var(--accent)">${linkText}</a>`;
         document.querySelector('.container').appendChild(box);
       }catch(err){
         console.error('Unexpected error:', err);
