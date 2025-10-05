@@ -1,8 +1,8 @@
 <?php
 // Non-public app config (outside docroot)
 const DB_HOST = 'localhost';
-const DB_USER = 'REPLACE_ME_DB_USER';
-const DB_PASS = 'REPLACE_ME_DB_PASS';
+const DB_USER = 'motorpoi_anketa';
+const DB_PASS = 'GrginDol4646';
 const DB_NAME = 'motorpoi_anketa';
 
 const ADMIN_USER = 'admin';
